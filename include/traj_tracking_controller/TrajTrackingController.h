@@ -1,11 +1,19 @@
 #pragma once
 
-#include "legged_rl_controllers/OnnxController.h"
+#include "legged_controllers/ControllerBase.h"
 
 namespace legged {
-class TrajTrackingController : public OnnxController {
- protected:
-  vector_t playModel(const vector_t& observations) const override;
+class TrajTrackingController : public ControllerBase {
+ public:
+  controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
+
+  controller_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) override;
+
+  controller_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) override;
+
+ private:
+  std::vector<std::vector<double>> trajs;  // trajs[time][joint]
+  rclcpp::Time startTime_;
 };
 
 }  // namespace legged
