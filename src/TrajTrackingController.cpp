@@ -10,7 +10,11 @@ controller_interface::return_type TrajTrackingController::update(const rclcpp::T
   vector_t desiredPosition = defaultPosition_;
   for (size_t i = 0; i < desiredPosition.size(); ++i) {
     const size_t index = static_cast<size_t>(std::round((time - startTime_).seconds() * 50));
-    desiredPosition[i] += 0.3 * trajs[index][i];
+    if (index >= trajs.size()) {
+      return controller_interface::return_type::ERROR;
+    }
+    size_t hardwareIndex = jointIndexMap_[jointNameInPolicy_[i]];
+    desiredPosition[hardwareIndex] += actionScale_ * trajs[index][i];
   }
   setPositions(desiredPosition);
 
@@ -21,6 +25,14 @@ controller_interface::CallbackReturn TrajTrackingController::on_configure(const 
   if (ControllerBase::on_configure(previous_state) != controller_interface::CallbackReturn::SUCCESS) {
     return controller_interface::CallbackReturn::ERROR;
   }
+  const size_t numJoints = leggedModel_->getLeggedModel()->getJointNames().size();
+  jointNameInPolicy_ = get_node()->get_parameter("policy.joint_names").as_string_array();
+  if (jointNameInPolicy_.size() != numJoints) {
+    RCLCPP_ERROR(get_node()->get_logger(), "joint_names size is not equal to joint size.");
+    return controller_interface::CallbackReturn::ERROR;
+  }
+  get_node()->get_parameter("policy.action_scale", actionScale_);
+
   std::string path;
   get_node()->get_parameter("traj_path", path);
   std::ifstream file(path);

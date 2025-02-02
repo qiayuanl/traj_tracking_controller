@@ -12,6 +12,9 @@ class TrajTrackingController : public ControllerBase {
   controller_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) override;
 
  private:
+  std::vector<std::string> jointNameInPolicy_;
+  scalar_t actionScale_{0};
+
   std::vector<std::vector<double>> trajs;  // trajs[time][joint]
   rclcpp::Time startTime_;
 };
