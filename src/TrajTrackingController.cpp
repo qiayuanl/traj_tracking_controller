@@ -31,6 +31,14 @@ controller_interface::CallbackReturn TrajTrackingController::on_configure(const 
     RCLCPP_ERROR(get_node()->get_logger(), "joint_names size is not equal to joint size.");
     return controller_interface::CallbackReturn::ERROR;
   }
+
+  for (const auto& i : jointNameInPolicy_) {
+    if (jointIndexMap_.find(i) == jointIndexMap_.end()) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Joint %s not found in jointIndexMap_", i.c_str());
+      return controller_interface::CallbackReturn::ERROR;
+    }
+  }
+
   get_node()->get_parameter("policy.action_scale", actionScale_);
 
   std::string path;
